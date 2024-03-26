@@ -1,7 +1,17 @@
-// send calldata -> function dispatch  -> function
+// send calldata -> function dispatch -> function
 
 // 60008060093d393df3
 
 #define macro MAIN() = takes(0) returns(0) {
-    
+    0x00     // PUSH0 // 60018060093d393df3  5f // [0]
+
+    // 0x02     // PUSH2 // TOP [2, 0] Bottom
+    calldataload // [calldata]
+    // How do I cut down the calldata? -> function selector
+
+    // SHR opcodes
+    // 0x0102 (bytes) hex
+    // 1 bytes = 1 bits
+    // 0b 1 00000010 -> binary >> 2
+    //      01000000
 }
