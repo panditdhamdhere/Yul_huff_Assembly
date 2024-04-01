@@ -65,20 +65,29 @@ CALLDATASIZE       // [calldata_size, 0x04]
 LT                // [calldata_size < 0x04]  
 PUSH1 0x30        // [0x30, calldata_size < 0x04]
 JUMPI              // []
-PUSH0
-CALLDATALOAD
-PUSH1 0xe0
-SHR
-DUP1
-PUSH4 0xcdfead2e
-EQ
-PUSH1 0x34
-JUMPI
-DUP1
-PUSH4 0xe026c017
-EQ
-PUSH1 0x45
-JUMPI
+
+
+// function dispatching in solidty for readnumberofhorses
+PUSH0            // []
+CALLDATALOAD     //[32 bytes of calldata] 
+PUSH1 0xe0        // [0xe0, 32 bytes of calldata]
+SHR               //[calldata [0:4]]  function selector
+
+// dispatching for set number of horses
+DUP1             // [func_selector, func_selector]
+PUSH4 0xcdfead2e   // [0xcdfead2e, func_selector, func_selector]
+EQ               //[func_selector == 0xcdfead2e, func_selector]
+PUSH1 0x34       // [0x34, func_selector == 0xcdfead2e, func_selector]
+JUMPI        // [func_selector]
+
+// if func_selector == 0xcdfead2e -> set_number_of_horses
+
+DUP1               // [func_selector, func_selector] 
+PUSH4 0xe026c017    // [0xe026c017, func_selector, func_selector]
+EQ             // [func_selector == 0xe026c017, func_selector]
+PUSH1 0x45         // [0x45, func_selector == 0xe026c017, func_selector]
+JUMPI       // [func_selector]
+// if func_selector == 0xe026c017 -> get_number_of_horses
 
 // calldata_jump
 // revert jumpdest
@@ -86,19 +95,31 @@ JUMPDEST    // []
 PUSH0   // [0]
 DUP1      // [0, 0]
 REVERT     // []
-JUMPDEST
-PUSH1 0x43
-PUSH1 0x3f
-CALLDATASIZE
-PUSH1 0x04
-PUSH1 0x59
-JUMP
-JUMPDEST
-PUSH0
-SSTORE
-JUMP
-JUMPDEST
-STOP
+
+//update HorseNumberDest 1
+JUMPDEST      // [func_selector]
+PUSH1 0x43     // [0x43, func_selector]
+PUSH1 0x3f    // [0x3f, 0x43, func_selector]
+CALLDATASIZE    // [calldata_size, 0x3f, 0x43, func_selector]
+PUSH1 0x04     // [0x04, calldata_size, 0x3f, 0x43, func_selector]
+PUSH1 0x59  // [0x59, 0x04, calldata_size, 0x3f, 0x43, func_selector]
+JUMP       //[0x04, calldata_size, 0x3f, 0x43, func_selector]
+
+// jump dest 4
+// we can finally run an sstore to save our value to storage:
+// function dispatch
+// checked for msg.value
+// checked that calldata is long enough
+// received the number to use from the calldata
+JUMPDEST  // [calldata_size, calldata(of numberToUpdate), 0x43, func_selector]
+PUSH0  //[0, calldata_size, calldata(of numberToUpdate), ,0x43, func_selector]
+SSTORE //[ 0x43, func_selector]
+JUMP    // [ func_selector]
+
+// jump dest 5
+
+JUMPDEST  // [ func_selector]
+STOP     // [ func_selector]
 JUMPDEST
 PUSH0
 SLOAD
@@ -116,25 +137,31 @@ SWAP2
 SUB
 SWAP1
 RETURN
-JUMPDEST
-PUSH0
-PUSH1 0x20
-DUP3
-DUP5
-SUB
-SLT
-ISZERO
-PUSH1 0x68
-JUMPI
-PUSH0
-DUP1
-REVERT
-JUMPDEST
-POP
-CALLDATALOAD
-SWAP2
-SWAP1
-POP
+
+// update horse number jump dest 2
+JUMPDEST                 // [0x04, calldata_size, 0x3f, 0x43, func_selector]
+PUSH0                    // [0, 0x04, calldata_size, 0x3f, 0x43, func_selector]
+PUSH1 0x20              // [0x20, 0, 0x04, calldata_size, 0x3f, 0x43, func_selector]
+DUP3                    // [0x04, 0x20, 0, 0x04, calldata_size, 0x3f, 0x43, func_selector]
+DUP5                    // [calldata_size, 0x04, 0x20, 0, 0x04, calldata_size, 0x3f, 0x43, func_selector]
+SUB                    //[calldata_size - 0x04, 0x20, 0, 0x04, calldata_size, 0x3f, 0x43, func_selector]
+SLT      // [calldata_size - 0x04 < 0x20,  0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+ISZERO           // [more_calldata_than_selector, calldata_size - 0x04 < 0x20 == true,  0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+PUSH1 0x68    // [0x68, more_calldata_than_selector, calldata_size - 0x04 < 0x20 == true,  0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+JUMPI // [ 0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+
+// revert if there is not enough calldata
+PUSH0  // [ 0, 0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+DUP1  // [0, 0, 0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+REVERT  // [  0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+
+//updateHorseNumber jump dest 3
+JUMPDEST  //[0, 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+POP      // [0x04,  calldata_size, 0x3f, 0x43, func_selector]
+CALLDATALOAD   // [calldata(of numberToUpdate), 0x04,  calldata_size, 0x3f, 0x43, func_selector]
+SWAP2  // [calldata_size, 0x04,  calldata(of numberToUpdate), 0x3f, 0x43, func_selector]
+SWAP1  // [0x04, calldata_size, calldata(of numberToUpdate), 0x3f, 0x43, func_selector]
+POP  // [calldata_size, calldata(of numberToUpdate), 0x3f, 0x43, func_selector]
 JUMP
 INVALID
 LOG2
