@@ -120,23 +120,26 @@ JUMP    // [ func_selector]
 
 JUMPDEST  // [ func_selector]
 STOP     // [ func_selector]
-JUMPDEST
-PUSH0
-SLOAD
-PUSH1 0x40
-MLOAD
-SWAP1
-DUP2
-MSTORE
-PUSH1 0x20
-ADD
-PUSH1 0x40
-MLOAD
-DUP1
-SWAP2
-SUB
-SWAP1
-RETURN
+
+// read number of horses jump dest 1
+// the only jump dest
+JUMPDEST  // [func_selector]
+PUSH0  //[0, func_selector]
+SLOAD  // [numHorses, func_selector]
+PUSH1 0x40   // [0x40, numHorses, func_selector]
+MLOAD  //[0x80] //Memory [0x40: 0x80] (free memory pointer)
+SWAP1  // [numHorses, 0x80, func_selector]
+DUP2      //[0x80, numHorses, 0x80, func_selector]
+MSTORE  // [0x80, func_selector] Memory: 0x80:numHorses
+PUSH1 0x20 //[0x20, 0x80, func_selector]
+ADD           // [0xa0, func_selector]
+PUSH1 0x40  // [0x40, 0xa0, func_selector]
+MLOAD  // [0x80, 0xa0, func_selector]
+DUP1    // [0x80, 0x80, 0xa0, func_selector]
+SWAP2  //[0xa0, 0x80, 0x80, func_selector]
+SUB          //[0xa0 - 0x80, 0x80, func_selector]
+SWAP1   //[0x80, 0xa0 - 0x80, func_selector]
+RETURN  // [func_selector]
 
 // update horse number jump dest 2
 JUMPDEST                 // [0x04, calldata_size, 0x3f, 0x43, func_selector]
@@ -162,7 +165,10 @@ CALLDATALOAD   // [calldata(of numberToUpdate), 0x04,  calldata_size, 0x3f, 0x43
 SWAP2  // [calldata_size, 0x04,  calldata(of numberToUpdate), 0x3f, 0x43, func_selector]
 SWAP1  // [0x04, calldata_size, calldata(of numberToUpdate), 0x3f, 0x43, func_selector]
 POP  // [calldata_size, calldata(of numberToUpdate), 0x3f, 0x43, func_selector]
-JUMP
+JUMP  //[calldata(of numberToUpdate), 0x3f, 0x43, func_selector]
+
+
+// part 3  -> metadata
 INVALID
 LOG2
 PUSH5 0x6970667358

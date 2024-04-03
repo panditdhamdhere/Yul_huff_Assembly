@@ -3,12 +3,17 @@ pragma solidity 0.8.25;
 
 import {Test, console2} from "forge-std/Test.sol";
 import {HorseStore} from "../../src/horseStoreV1/HorseStore.sol";
+import {IHorseStore} from "../../src/horseStoreV1/IHorseStore.sol";
+// import {HorseStoreYul} from "../../src/horseStoreV1/HorseStoreYul.sol";
 
 abstract contract Base_TestV1 is Test {
-    HorseStore public horseStore;
+    IHorseStore public horseStore;
+
+    bytes yulCode = 
+        "\x19\x20\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00";
 
     function setUp() public virtual {
-        horseStore = new HorseStore();
+        horseStore = IHorseStore(address(new HorseStore()));
     }
 
     function testReadValue() public {
@@ -17,7 +22,6 @@ abstract contract Base_TestV1 is Test {
     }
 
     function testWriteValue(uint256 numberOfHorses) public {
-       
         horseStore.updateHorseNumber(numberOfHorses);
         assertEq(horseStore.readNumberOfHorses(), numberOfHorses);
     }
