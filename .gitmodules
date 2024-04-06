@@ -4,3 +4,6 @@
 [submodule "1-horse-store/lib/openzeppelin-contracts"]
 	path = 1-horse-store/lib/openzeppelin-contracts
 	url = https://github.com/OpenZeppelin/openzeppelin-contracts
+[submodule "1-horse-store/lib/huffmate"]
+	path = 1-horse-store/lib/huffmate
+	url = https://github.com/huff-language/huffmate
